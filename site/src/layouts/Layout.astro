@@ -39,14 +39,19 @@ const trackingEnabled = import.meta.env.PUBLIC_ENABLE_VISITOR_STATS === 'true';
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#f1f8f6" />
+    <meta id="theme-color" name="theme-color" content="#f1f8f6" />
     <script is:inline>
       (() => {
+        const storageKey = 'list-formatting-theme';
+        let storedTheme = null;
         try {
-          if (localStorage.getItem('list-formatting-theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+          storedTheme = localStorage.getItem(storageKey);
         } catch (error) {
           console.info('Theme preference storage is unavailable; using the default theme.', error);
         }
+        const theme = storedTheme === 'dark' ? 'dark' : 'light';
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
       })();
     </script>
     <title>{pageTitle}</title>
@@ -75,8 +80,10 @@ const trackingEnabled = import.meta.env.PUBLIC_ENABLE_VISITOR_STATS === 'true';
             </a>)}
           </nav>
           <a class="icon-button github-link" href="https://github.com/pnp/List-Formatting" aria-label="View repository on GitHub"><GitFork size={19} aria-hidden="true" /></a>
-          <button class="theme-toggle icon-button" type="button" aria-label="Switch to dark mode" role="switch" aria-checked="false">
-            <Sun class="sun" size={18} aria-hidden="true" /><Moon class="moon" size={18} aria-hidden="true" />
+          <button class="theme-toggle" id="theme-toggle" type="button" role="switch" aria-checked="false" aria-label="Switch to dark mode" title="Switch to dark mode">
+            <span class="theme-toggle__icons" aria-hidden="true">
+              <Sun class="theme-toggle__sun" size={16} /><Moon class="theme-toggle__moon" size={15} />
+            </span>
           </button>
           <details class="mobile-nav">
             <summary aria-label="Open navigation"><Menu size={23} aria-hidden="true" /></summary>
@@ -101,21 +108,31 @@ const trackingEnabled = import.meta.env.PUBLIC_ENABLE_VISITOR_STATS === 'true';
     </footer>
     {trackingEnabled && <img data-visitor-stats src={tracker} alt="" width="1" height="1" aria-hidden="true" class="tracking-image" />}
     <script>
-      const toggle = document.querySelector<HTMLButtonElement>('.theme-toggle');
+      const storageKey = 'list-formatting-theme';
       const root = document.documentElement;
-      function syncTheme() {
-        const dark = root.dataset.theme === 'dark';
-        const label = `Switch to ${dark ? 'light' : 'dark'} mode`;
-        toggle?.setAttribute('aria-checked', String(dark));
-        toggle?.setAttribute('aria-label', label);
-        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#091b18' : '#f1f8f6');
+      const toggle = document.querySelector<HTMLButtonElement>('#theme-toggle');
+      const themeColor = document.querySelector<HTMLMetaElement>('#theme-color');
+
+      function applyTheme(theme: 'light' | 'dark', persist = false) {
+        root.dataset.theme = theme;
+        root.style.colorScheme = theme;
+        if (toggle) {
+          const dark = theme === 'dark';
+          const label = `Switch to ${dark ? 'light' : 'dark'} mode`;
+          toggle.setAttribute('aria-checked', String(dark));
+          toggle.setAttribute('aria-label', label);
+          toggle.title = label;
+        }
+        if (themeColor) themeColor.content = theme === 'dark' ? '#091b18' : '#f1f8f6';
+        if (persist) {
+          try { localStorage.setItem(storageKey, theme); }
+          catch (error) { console.info('Theme preference cannot be saved on this browser.', error); }
+        }
       }
-      syncTheme();
+
+      applyTheme(root.dataset.theme === 'dark' ? 'dark' : 'light');
       toggle?.addEventListener('click', () => {
-        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
-        syncTheme();
-        try { localStorage.setItem('list-formatting-theme', root.dataset.theme); }
-        catch (error) { console.info('Theme preference cannot be saved on this browser.', error); }
+        applyTheme(root.dataset.theme === 'dark' ? 'light' : 'dark', true);
       });
     </script>
   </body>

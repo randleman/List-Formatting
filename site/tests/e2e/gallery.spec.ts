@@ -126,7 +126,8 @@ test('representative pages have no serious accessibility violations in either th
   for (const route of ['./', 'samples/form/status-header-footer/', 'getting-started/', 'contributors/', 'whats-new/']) {
     await page.goto(route);
     for (const theme of ['light', 'dark']) {
-      await page.evaluate((value) => document.documentElement.dataset.theme = value, theme);
+      if (await page.locator('html').getAttribute('data-theme') !== theme) await page.getByRole('switch').click();
+      await expect(page.locator('html')).toHaveCSS('color-scheme', theme);
       const results = await new AxeBuilder({ page }).analyze();
       expect(results.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? '')), `${route} ${theme}`).toEqual([]);
     }

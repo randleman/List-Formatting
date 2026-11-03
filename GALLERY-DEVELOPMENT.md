@@ -28,6 +28,24 @@ npm run build
 npm run preview -- --port 4337
 ```
 
+### Theme switching
+
+The header uses the same two-icon sliding switch and light-by-default preference
+model as the [Copilot Prompt Gallery](https://github.com/pnp/copilot-prompts).
+Only an explicit saved `dark` choice enables dark mode; the operating system's
+color preference does not change it automatically. The existing
+`list-formatting-theme` browser storage key preserves returning visitors' choices.
+
+The saved theme and native-control color scheme are applied in the page head,
+before content appears. Switching also updates the accessible state, tooltip,
+and browser theme color. Both themes remain usable when storage is blocked,
+with a console diagnostic instead of a saved preference. Switch animations
+respect reduced-motion preferences.
+
+After building, run `npm run test:e2e -- tests/e2e/theme.spec.ts` for focused
+desktop/mobile coverage of initialization, persistence, keyboard controls,
+blocked storage, and the sliding control.
+
 ## Validation
 
 ```powershell
